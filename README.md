@@ -7,8 +7,10 @@
 
 
 # Note
-## Risk Beta
+## Risk Alpha & Beta
 https://www.investopedia.com/ask/answers/070615/what-formula-calculating-beta.asp
+
+https://www.investopedia.com/ask/answers/102714/whats-difference-between-alpha-and-beta.asp
 
 ## Realtime TW Stock Python API
 https://github.com/mlouielu/twstock
