@@ -283,7 +283,7 @@ if __name__ == '__main__':
     #Weight_PATH=f'model/{date}/PPO_ETH3000_2020_150_256_cnn.pth' #sortino
 
     hidden=256
-    for _ in tqdm(range(20)):
+    for _ in tqdm(range(5)):
         for pre_train,randomm in [(True,False),(False,False),(False,True)]: 
 
             process_list, order,data,signal,re_list,so_list=test()
@@ -337,3 +337,66 @@ if __name__ == '__main__':
     pd.Series(data['Close'][window_size:].reset_index(drop=True)-data['Close'].iloc[window_size]).plot(label='index',legend=True)
     plt.savefig(f'fig/ppo/{date}/PPO_{data_path2}_{max_bid}_s{random_seed}_index_test.png',dpi=150)
     plt.title(f"testing_{data_path2}_{max_bid}_s{random_seed}")
+
+#once test log
+###once test setting
+max_bid=3
+pre_train=True
+randomm=False
+process_list, order,data,signal ,re_list,so_list=test()
+###
+
+index_buy=[]
+mark_buy=[]
+index_sell=[]
+mark_sell=[]
+
+shift2=[9]*(window_size)
+shift2.extend(signal)
+len(shift2)
+# signal
+close_sell_id=[]
+close_buy_id=[]
+close_sell=[]
+close_buy=[]
+long_short=0
+
+for i,sig in enumerate(shift2):
+    if long_short>0 and sig==0:
+        close_sell_id.append(i)
+    if long_short<0 and sig==2:
+        close_buy_id.append(i)
+    if sig==0:
+        if -max_bid<long_short<=max_bid:
+            long_short-=1
+    elif sig==1:
+        pass
+    elif sig==2:
+        if -max_bid<=long_short<max_bid:
+            long_short+=1
+
+for mark in order:
+    if mark['type']=='buy':
+        index_buy.append(mark['id']-1)
+        mark_buy.append(mark['price'])
+        if mark['close']:
+            close_sell.append(mark['price']+mark['gain'])
+    elif mark['type']=='sell':
+        index_sell.append(mark['id']-1)
+        mark_sell.append(mark['price'])
+        if mark['close']:
+            close_buy.append(mark['price']+mark['gain'])
+
+fig, (ax0, ax1)= plt.subplots(2, 1,dpi=150, sharex=True)
+ax0.set_title(f'{asset}')
+ax1.set_xlabel('time(days)')
+ax0.plot(data['Close'])
+ax0.scatter(index_buy,mark_buy,color='red', marker='^',linewidths=1)
+ax0.scatter(close_buy_id,close_buy,color='red', marker='^',linewidths=1)
+ax0.scatter(index_sell,mark_sell,color='green', marker='v',linewidths=1)
+ax0.scatter(close_sell_id,close_sell,color='green', marker='v',linewidths=1)
+ax1.set_title('acc profit')
+shift=[0]*(window_size)
+shift.extend(process_list)
+ax1.plot(shift)
+plt.savefig(f'fig/ppo/{date}/PPO_{data_path2}_{max_bid}_cmp_test.png',dpi=150)
