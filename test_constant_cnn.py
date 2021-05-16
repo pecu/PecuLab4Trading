@@ -212,8 +212,8 @@ def test():
 
     for t in range(max_timesteps):
 
-        #data = raw_data[['Open', 'High', 'Low', 'Close']]
-        data = raw_data[['Open', 'High', 'Low', 'Close','slowk','slowd','macdhist','RSI','WILLR']]
+        data = raw_data[['Open', 'High', 'Low', 'Close']]
+        # data = raw_data[['Open', 'High', 'Low', 'Close','slowk','slowd','macdhist','RSI','WILLR']]
 
         gaf = state_convert(raw_data[['Open', 'High', 'Low', 'Close']].iloc[t:t+window_size])
         state = cnn(gaf)
@@ -252,8 +252,16 @@ def sortino_ratio(return_series, N, rf):
 if __name__ == '__main__':
     window_size = 10
     max_bid=3 
+
+    print('CUDA is available: {}'.format(torch.cuda.is_available()))
+    print('CUDA current device: {}'.format(torch.cuda.current_device()))
+    print('CUDA current addr: {}'.format(torch.cuda.device(0)))
+    print('CUDA device count: {}'.format(torch.cuda.device_count()))
+    print('CUDA device name: {}'.format(torch.cuda.get_device_name(0)))
+
+    print(device)
     
-    data_path='data/TWII_2019_testing.csv'
+    # data_path='data/TWII_2019_testing.csv'
     #data_path='data/SPY_2019_testing.csv'
     #data_path='data/ETH_2019_testing.csv'
     #data_path='data/GLD_2019_testing.csv'
@@ -263,6 +271,10 @@ if __name__ == '__main__':
     #data_path='data/AAPL_2019_testing.csv'
     #data_path='data/EWJ_2019_testing.csv'
     #data_path='data/ACWI_2019_testing.csv'
+
+    # YC
+    # data_path='data/2330_kbar_daily_gmt_ohlc.csv'
+    data_path='data/1229_kbar_daily_gmt_ohlc.csv'
 
 
     asset=data_path.split("/")[1].split("_")[0]

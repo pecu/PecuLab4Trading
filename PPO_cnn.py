@@ -162,10 +162,10 @@ def main():
     window_size = 10
     state_dim = 10 
     action_dim = 3
-    log_interval = 5           # print avg reward in the interval
-    max_episodes = epoch     # max training episodes
+    log_interval = 5            # print avg reward in the interval
+    max_episodes = epoch        # max training episodes
     n_latent_var = 256          # number of variables in hidden layer
-    update_timestep = 7     # update policy every n timesteps
+    update_timestep = 7         # update policy every n timesteps
     lr = 0.0003
     betas = (0.9, 0.999)
     gamma = 0.99                # discount factor
@@ -176,6 +176,9 @@ def main():
     random_seed = 1276
     
     #############################################
+
+    ### HW Config ###########
+    print(torch.cuda.is_available())
 
     if random_seed:
         torch.manual_seed(random_seed)
