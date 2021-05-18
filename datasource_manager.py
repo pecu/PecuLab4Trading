@@ -17,7 +17,15 @@ import time
 class DataSourceManager:
     "Access stock data"
 
+
+
     def __init__(self):
+
+        self.api = None
+
+        self.person_id = None
+        self.passwd = None
+
         pass
 
     def make_connection_sino(self, pid, passwd):
@@ -41,12 +49,12 @@ class DataSourceManager:
 
         df_tick.to_csv('{}_ticks_{}.csv'.format(stock_num_str, date_str), index = False)
 
-    def dump_kbars_to_file_sino(self, stock_num, date_start_str, date_end_str):
+    def dump_kbars_to_file_sino(self, stock_num, date_start_str, date_end_str, folder_path):
         kbars = self.api.kbars(self.api.Contracts.Stocks[stock_num], start=date_start_str, end=date_end_str)
         df_kbars = pd.DataFrame({**kbars})
         df_kbars.ts = pd.to_datetime(df_kbars.ts)
 
-        df_kbars.to_csv('{}_kbars_{}_{}.csv'.format(stock_num, date_start_str, date_end_str), index = False)
+        df_kbars.to_csv('./{}/{}_kbars_{}_{}.csv'.format(folder_path, stock_num, date_start_str, date_end_str), index = False)
 
         display(df_kbars)
 
@@ -91,7 +99,16 @@ class DataSourceManager:
         # Show the candle stick
         # https://tn00343140a.pixnet.net/blog/post/278811668-python%E8%A9%A6%E8%91%97%E7%94%A8matplotlib%E7%95%AB%E5%87%BAk%E7%B7%9A%E5%9C%96
 
-        fig, ax = plt.subplots()    
+        if plt.get_fignums():
+            # window(s) open
+            fig = plt.gcf()
+            ax = plt.gca()
+            plt.cla()
+        else:
+            # no windows
+            fig, ax = plt.subplots()
+
+            
         
         df_kbars_daily['Date'] = df_kbars_daily['Date'].apply(mpl_dates.date2num)
 
@@ -106,9 +123,18 @@ class DataSourceManager:
         fig.autofmt_xdate()
 
         fig.tight_layout()
-        plt.show()
+        
+        # with blocking
+        # plt.show()
+
+        # with non-blocking
+        plt.draw()
+        plt.pause(0.001)
 
         df_kbars_daily['Date'] = df_kbars_daily['Date'].apply(mpl_dates.num2date)
+
+    def save_current_figure(self, filepath):
+        plt.gcf().savefig(filepath)
 
 
     """
