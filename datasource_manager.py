@@ -11,7 +11,18 @@ import matplotlib.dates as mpl_dates
 
 import matplotlib.pyplot as plt
 
+import numpy as np
+
+import operator
+
 import time
+
+import requests
+
+import os.path
+from os import path
+
+from matplotlib.font_manager import FontProperties
 
 
 class DataSourceManager:
@@ -56,7 +67,7 @@ class DataSourceManager:
 
         df_kbars.to_csv('./{}/{}_kbars_{}_{}.csv'.format(folder_path, stock_num, date_start_str, date_end_str), index = False)
 
-        display(df_kbars)
+        # display(df_kbars)
 
     def load_kbars_csv(self, filepath):
         return pd.read_csv(filepath)
@@ -81,10 +92,10 @@ class DataSourceManager:
         kbars_daily_low = df_min_kbars[df_min_kbars.index.strftime('%Y-%m-%d %H:%M:%S').isin(entry_low)]
         kbars_daily_low.index = pd.to_datetime(kbars_daily_low.ts, format='%Y-%m-%d').dt.date
 
-        display(kbars_daily_open)
-        display(kbars_daily_close)
-        display(kbars_daily_high)
-        display(kbars_daily_low)
+        # display(kbars_daily_open)
+        # display(kbars_daily_close)
+        # display(kbars_daily_high)
+        # display(kbars_daily_low)
 
         kbars_daily = pd.concat([kbars_daily_open[("Open")], kbars_daily_high["High"], kbars_daily_low["Low"], kbars_daily_close["Close"]], axis=1) 
 
@@ -99,7 +110,7 @@ class DataSourceManager:
         # Show the candle stick
         # https://tn00343140a.pixnet.net/blog/post/278811668-python%E8%A9%A6%E8%91%97%E7%94%A8matplotlib%E7%95%AB%E5%87%BAk%E7%B7%9A%E5%9C%96
 
-        if plt.get_fignums():
+        if len(plt.get_fignums()) > 0:
             # window(s) open
             fig = plt.gcf()
             ax = plt.gca()
@@ -133,7 +144,18 @@ class DataSourceManager:
 
         df_kbars_daily['Date'] = df_kbars_daily['Date'].apply(mpl_dates.num2date)
 
-    def save_current_figure(self, filepath):
+    def save_current_figure(self, filepath, **kwargs):
+
+        if 'fig_title' in kwargs:
+            font = FontProperties(fname=r"c:\windows\fonts\simsun.ttc", size=14) # 步驟二
+            # plt.rcParams['font.sans-serif']=['SimHei']
+            # plt.rcParams['axes.unicode_minus'] = False
+            # plt.title(kwargs.get('fig_title'), fontproperties="SimHei")
+            plt.title(kwargs.get('fig_title'), fontproperties=font, fontsize=12)
+
+            # plt.show()
+
+        plt.gcf().tight_layout()
         plt.gcf().savefig(filepath)
 
 
@@ -159,6 +181,55 @@ class DataSourceManager:
 
         output_df.to_csv(filepath, index=False)
 
+    def kbars_sharp_ratio(self, df_kbars ):
+
+        close_value_array = df_kbars['Close']
+
+        diff_array = np.subtract(close_value_array[1:].values, close_value_array[0:-1].values)
+
+        diff_ratio_array = np.divide(diff_array, close_value_array[0:-1].values)
+
+        diff_ratio_mean_positive = np.mean(diff_ratio_array[diff_ratio_array>0])
+        diff_ratio_std_positive = np.std(diff_ratio_array[diff_ratio_array>0])
+
+        diff_ratio_mean_nagtive = np.mean(diff_ratio_array[diff_ratio_array<0])
+        diff_ratio_std_nagtive = np.std(diff_ratio_array[diff_ratio_array<0])
+
+        return diff_ratio_mean_positive, diff_ratio_std_positive, diff_ratio_mean_nagtive, diff_ratio_std_nagtive
+
+    def fetch_stock_id_and_info(self):
+
+        if(path.exists("stoke_id_and_info.pkl")):
+
+            df_id_and_name = pd.read_pickle("stoke_id_and_info.pkl")
+
+        else:
+            # 其中strMode=2就是上市，而strMode=4就是上櫃
+            res = requests.get("http://isin.twse.com.tw/isin/C_public.jsp?strMode=2")
+            df_raw = pd.read_html(res.text)[0]
+
+            df_id_and_name = df_raw[0]
+            df_id_and_name.to_pickle("stoke_id_and_info.pkl")
+
         
+
+        data_1st_pass = [item.split("\u3000") for item in df_id_and_name[3:].values[:]]
+        stock_list_sep_with_u3000 = [item for item in data_1st_pass if len(item)==2]
+
+        data_2st_pass = [item for item in data_1st_pass if len(item)==1]
+        data_2st_pass_split = [item[0].split(" ") for item in data_2st_pass]
+        stock_list_sep_with_space = [item for item in data_2st_pass_split if len(item)==2]
+
+        dict_stock_id_and_info = dict(stock_list_sep_with_u3000 + stock_list_sep_with_space)
+
+        return dict_stock_id_and_info
+
+
+# Testing
+
+ds_manager = DataSourceManager()
+
+df_stock_info = ds_manager.fetch_stock_id_and_info()
+
 
         
